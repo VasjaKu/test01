@@ -1,0 +1,28 @@
+<html>
+<head>
+<meta charset="utf-8">
+<title>Главная страница</title>
+</head>
+<body>
+<h1 align="center"> Место хранения вещи: {{ title }}</h1>
+<table width="100%" border="1" cellpadding="1" cellspacing="1">
+<tr>
+<td>Название</td>
+<td>Количество</td>
+<td>Дата С</td>
+<td>Дата По</td>
+</tr>
+{% for rec in data %}
+<tr>
+<td>{{ rec[1] }}</td>
+<td>{{ rec[7] }}</td>
+<td>{{ rec[9] }}</td>
+<td>{{ rec[10] }}</td>
+</tr>
+{% endfor %}
+</table>
+<a href="/"> На главную </a>
+<a href= "/items"> К вещам </a>
+</body>
+</html>
+

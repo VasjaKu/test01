@@ -1,0 +1,30 @@
+<html>
+<head>
+<meta charset="utf-8">
+<title>Главная страница</title>
+</head>
+<body>
+<h1 align="center"> Страница вещей</h1>
+<table width="100%" border="1" cellpadding="1" cellspacing="1">
+<tr>
+<td>ID записи</td>
+<td>Наименование</td>
+<td>Серийный номер</td>
+</tr>
+{% for rec in data %}
+<tr>
+<td>{{ rec[0] }}</td>
+<td><a href="/item?item_id={{ rec[0] }}&item_name={{ rec[1] }}">{{ rec[1] }}</a></td>
+<td>{{ rec[2] }}</td>
+</tr>
+{% endfor %}
+</table>
+<a href="/items?limit={{ limit }}&offset={{ first }}"><<</a> <!-- ссылка на первую страницу -->
+<a href="/items?limit={{ limit }}&offset={{ prev }}"><</a> <!-- ссылка на предыдущую страницу -->
+<a href="/items?limit={{ limit }}&offset={{ next }}">></a> <!-- ссылка на следующую страницу -->
+<a href="/items?limit={{ limit }}&offset={{ last }}">>></a> <!-- ссылка на последнюю страницу -->
+<br>
+<a href="/"> На главную </a>
+</body>
+</html>
+

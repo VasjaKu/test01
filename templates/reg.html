@@ -1,0 +1,29 @@
+<html>
+<head>
+<meta charset="utf-8">
+<title>Страница регистрации</title>
+</head>
+<body>
+<h1 align="center">Зарегистрируйтесь на нашем сайте!</h1>
+<fieldset action="/reg_res">
+<form action= "/reg_res" method="POST">
+<legend>Регистрация</legend>
+<label>Логин<input type="text" name="q1" required></label>
+<br>
+<label>Пароль<input type="password" name="q2" required></label>
+<br>
+<label>Повторите пароль<input type="password" name="q3" required></label>
+<br>
+<label>Выберите роль</label> 
+<select name="role">
+{% for record in data %}
+   <option value="{{ record[0] }}">{{ record[1] }}</option>
+{% endfor %}
+</select>
+<br>
+<button type= "submit"> Регистрация </button>
+</form>
+</fieldset>
+<a href="/"> На главную </a>
+</body>
+</html>

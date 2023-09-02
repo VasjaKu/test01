@@ -1,0 +1,31 @@
+<html>
+<head>
+<meta charset="utf-8">
+<title>Главная страница</title>
+</head>
+<body>
+<a href="/reg">Регистрация</a>
+<span> или </span>
+<a href="/login">Авторизация</a>
+<h1 align="center">Главная страница склада</h1>
+<table width="100%" border="1" cellpadding="1" cellspacing="1">
+<tr>
+<td>ID записи</td>
+<td>Название</td>
+<td>Полный путь</td>
+</tr>
+{% for rec in data %}
+<tr>
+<td>{{ rec[0] }}</td>
+<td>{{ rec[1] }}</td>
+<td><a href="/place?warehouse_id={{ rec[0] }}&title={{ rec[2] }}">{{ rec[2] }}</a></td>
+</tr>
+{% endfor %}
+</table>
+<a href="/items">Список ТМЦ</a>
+<form name="search" method="POST" action="/search">
+<input type="text" name="q" value="" /> <input type="submit" value="Искать" />
+</form>
+</body>
+</html>
+
