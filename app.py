@@ -72,10 +72,10 @@ def place():
         return redirect(url_for('authorisation'), code=302)
     warehouse_id = request.args.get('warehouse_id')
     title = request.args.get('title');
-    sql = "select id_i, item, serial_number, id_w,path, place, recordings_id, quantity,available ,f_date, l_date from recordings_view where id_w = "+warehouse_id
+    sql = "select id_i, item, serial_number, id_w,path, place, recordings_id, quantity,available ,f_date, l_date from recordings_view where id_w = %s"
     conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute(sql)
+    #cur = conn.cursor()
+    cur.execute(sql, (warehouse_id))
     data = cur.fetchall()
     cur.close()
     conn.close()
@@ -132,10 +132,10 @@ def item():
         return redirect(url_for('authorisation'), code=302)
     item_id = request.args.get('item_id')
     title = request.args.get('item_name')
-    sql = "select id_i, item, serial_number, id_w,path, place, recordings_id, quantity,available ,f_date, l_date from recordings_view where id_i = "+item_id
+    sql = "select id_i, item, serial_number, id_w,path, place, recordings_id, quantity,available ,f_date, l_date from recordings_view where id_i = %s"
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute(sql)
+    cur.execute(sql, (item_id))
     data = cur.fetchall()
     cur.close()
     conn.close()
@@ -223,8 +223,8 @@ def registration_result():
     query3 = get_param('q3')
     conn = get_db_connection()
     cur = conn.cursor()
-    sql = "select count(*) from (select 1 as a from users where users.username = '"+query1+"') b"
-    cur.execute(sql)
+    sql = "select count(*) from (select 1 as a from users where users.username = %s) b"
+    cur.execute(sql, (query1, ))
     data = cur.fetchall()
     if data[0][0] == 0:
         if query2 == query3:
@@ -232,9 +232,11 @@ def registration_result():
             salt = hashlib.md5(str(rand).encode()).hexdigest()
             string = query2 + salt
             ha = hashlib.md5(string.encode())
-            sql = "insert into users(username, salt, pass, ban, user_role) values ('"+query1+"', '"+salt+"', '"+ha.hexdigest()+"', 'Yes', '"+get_param('role')+"')"
+            #sql = "insert into users(username, salt, pass, ban, user_role) values ('"+query1+"', '"+salt+"', '"+ha.hexdigest()+"', 'Yes', '"+get_param('role')+"')"
+            sql = "insert into users(username, salt, pass, ban, user_role) values (%s, %s, %s, %s, %s)"
             #print(sql)
-            cur.execute(sql)
+            #cur.execute(sql)
+            cur.execute(sql, (query1, salt, ha.hexdigest(), 'Yes', get_param('role')))
             conn.commit()
             string1 = "Регистрация успешно завершена!"
             string2 = "Теперь вам доступно ровно 0 новых фишек!"
@@ -266,16 +268,20 @@ def authorisation_result():
     query2 = get_param('q2')
     conn = get_db_connection()
     cur = conn.cursor()
-    sql = "select count(*) from (select 1 as a from users where users.username = '"+query1+"') b"
-    cur.execute(sql)
+    #sql = "select count(*) from (select 1 as a from users where users.username = '"+query1+"') b"
+    sql = "select count(*) from (select 1 as a from users where users.username = %s) b"
+    #cur.execute(sql)
+    cur.execute(sql, (query1, ))
     data = cur.fetchall();
     is_authorized = False
     if data[0][0] == 0:
         string1 = "Авторизация успешно провалена!"
         string2 = "Такого никнейма нет в базе дынных. Введите другое имя или зарегистрируйтесь!"
     else:
-        sql = "select salt, pass, ban, user_role from users where users.username = '"+query1+"'"
-        cur.execute(sql)
+        #sql = "select salt, pass, ban, user_role from users where users.username = '"+query1+"'"
+        sql = "select salt, pass, ban, user_role from users where users.username = %s"
+        #cur.execute(sql)
+        cur.execute(sql, (query1, ))
         data = cur.fetchall();
         string = query2 + data[0][0]
         ha = hashlib.md5(string.encode())
