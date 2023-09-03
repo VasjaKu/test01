@@ -166,9 +166,10 @@ def do_search():
     else:
         offset = int(get_param('offset'))
     #return '['+str(limit)+']'
-    sql = "select count(*) from (select 1 as a from items where lower(items.item) like '%"+query.lower()+"%' union all select 1 as a from warehouse where lower(warehouse.place) like '%"+query.lower()+"%') b"
-    #print(sql)
-    cur.execute(sql);
+    #sql = "select count(*) from (select 1 as a from items where lower(items.item) like '%"+query.lower()+"%' union all select 1 as a from warehouse where lower(warehouse.place) like '%"+query.lower()+"%') b"
+    sql = "select count(*) from (select 1 as a from items where lower(items.item) like %s union all select 1 as a from warehouse where lower(warehouse.place) like %s) b"
+    #print(sql, ( '%'+query.lower()+'%', '%'+query.lower()+'%' ))
+    cur.execute(sql, ( '%'+query.lower()+'%', '%'+query.lower()+'%' ));
     data = cur.fetchall()
     total = float(data[0][0]);
     pages = math.ceil(total / limit)
@@ -184,10 +185,11 @@ def do_search():
     if next_page >= total:
        next_page = next_page - limit
     last_page = int(total // limit)*limit
-    sql = "select id_i as id, item, '/item?item_id='||id_i::varchar(10)||'&item_name='||item as type from items where lower(items.item) like '%"+query.lower()+"%' union all select id_w, place, '/place?warehouse_id='||id_w::varchar(10)||'&title='||place from warehouse where lower(warehouse.place) like '%"+query.lower()+"%'"
-    sql = sql + " limit "+str(limit)+" offset "+str(offset)
+    #sql = "select id_i as id, item, '/item?item_id='||id_i::varchar(10)||'&item_name='||item as type from items where lower(items.item) like '%"+query.lower()+"%' union all select id_w, place, '/place?warehouse_id='||id_w::varchar(10)||'&title='||place from warehouse where lower(warehouse.place) like '%"+query.lower()+"%'"
+    sql = "select id_i as id, item, '/item?item_id='||id_i::varchar(10)||'&item_name='||item as type from items where lower(items.item) like %s union all select id_w, place, '/place?warehouse_id='||id_w::varchar(10)||'&title='||place from warehouse where lower(warehouse.place) like %s"
+    sql = sql + " limit %s offset %s"
     #return sql
-    cur.execute(sql)
+    cur.execute(sql, ('%'+query.lower()+'%', '%'+query.lower()+'%', limit, offset))
     data = cur.fetchall()
     cur.close()
     conn.close()
