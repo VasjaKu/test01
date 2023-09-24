@@ -3,6 +3,7 @@ import psycopg2
 import math
 import random
 import hashlib
+from time import time
 from flask import session
 from flask_session import Session
 from flask import Flask
@@ -74,7 +75,7 @@ def place():
     title = request.args.get('title');
     sql = "select id_i, item, serial_number, id_w,path, place, recordings_id, quantity,available ,f_date, l_date from recordings_view where id_w = %s"
     conn = get_db_connection()
-    #cur = conn.cursor()
+    cur = conn.cursor()
     cur.execute(sql, (warehouse_id))
     data = cur.fetchall()
     cur.close()
@@ -114,7 +115,10 @@ def items():
        next_page = (page + 1)*limit
     if next_page >= total:
        next_page = next_page - limit
-    last_page = int(total // limit)*limit
+    if (int(total // limit)*limit == (int(total // limit)*limit)):
+        last_page = int(total // limit)*limit - limit
+    else:
+        last_page = int(total // limit)*limit
 
     cur.execute("""
         select id_i, item, serial_number
@@ -306,3 +310,182 @@ def authorisation_result():
     #if is_authorized == True:
     #    resp.set_cookie('session_id', create_cookie())
     return resp
+
+@app.route('/ban', methods=['GET', 'POST'])
+def ban():
+    if not is_authorized(session):
+        return redirect(url_for('authorisation'), code=302)
+    if session['user_role'] != 2:
+        return 'Твоя здесь низя!<br>'
+    conn = get_db_connection()
+    cur = conn.cursor()
+    limit = get_param('limit')
+    if limit is None or limit == '':
+        limit = 10
+    else:
+        limit = int(limit)
+    if get_param('offset') is None or get_param('offset') == '':
+        offset = 0
+    else:
+        offset = int(get_param('offset'))
+    #return str(type(cur))+'ZZZ'
+    sql = "select count(*) from users"
+    cur.execute(sql)
+    data = cur.fetchall()
+    total = float(data[0][0]);
+    number = data[0][0]
+    pages = math.ceil(total / limit)
+    page = math.floor(offset / limit)
+    if (page <= 0):
+        previous_page = 0
+    else:
+        previous_page = (page - 1)*limit
+    if (page >= pages):
+       next_page = pages*limit
+    else:
+       next_page = (page + 1)*limit
+    if next_page >= total:
+       next_page = next_page - limit
+    last_page = int(total // limit)*limit
+    sql = "select id_u, username, ban, user_role from users order by id_u"
+    user = session["username"]
+    cur.execute(sql)
+    data = cur.fetchall()
+    strings = [[0] * 2 for i in range(number)]
+    for i in range(number):
+        if data[i][2] == "Yes" and session["username"] == data[i][1]:
+            string_a = "Yes"
+            string_b = "Вы не можете расстрелять сами себя!"
+        elif data[i][2] == "Yes":
+            string_a = "No"
+            string_b = "Расстрелять!"
+        else:
+            string_a = "Yes"
+            string_b = "Амнистировать!"
+        strings[i][0] = string_a
+        strings[i][1] = string_b
+    return render_template('ban.html', data=data, next=next_page, prev=previous_page, first=0, last=last_page, limit=limit, user = user, strings = strings, number = number)
+
+@app.route('/ban_result', methods = ['GET', 'POST'])
+def ban_result():
+    if not is_authorized(session):
+        return redirect(url_for('authorisation'), code=302)
+    if session['user_role'] != 2:
+        return 'Твоя здесь низя!<br>'
+    id_u = request.args.get('id_u')
+    ban = request.args.get('ban')
+    conn = get_db_connection()
+    cur = conn.cursor()
+    sql = "select username from users where id_u = %s"
+    cur.execute(sql, (id_u, ))
+    name = cur.fetchall()
+    sql = "update users set ban = %s where id_u = %s"
+    cur.execute(sql, (ban, id_u))
+    conn.commit()
+    if session["username"] == name[0][0]:
+        words = "Нельзя расстрелять самого себя!"
+    elif ban == "Yes":
+        words = "Пользователь был амнистирован!"
+    else:
+        words = "Именем админа Вы приговариваетесь к расстрелу! *Пыщ!*"
+    #data = cur.fetchall()
+    cur.close()
+    conn.close()
+    return render_template('ban_result.html', time = time(), words = words)
+
+@app.route('/add_tmc', methods = ['GET', 'POST'])
+def add_tmc():
+    if not is_authorized(session):
+        return redirect(url_for('authorisation'), code=302)
+    if session['user_role'] != 2:
+        return 'Твоя здесь низя!<br>'
+    query1 = get_param('q1')
+    query2 = get_param('q2')
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.close()
+    conn.close()
+    return render_template('add_tmc.html', q1=query1, q2=query2)
+
+@app.route('/add_tmc_result', methods=['GET', 'POST'])
+def tmc_result():
+    if not is_authorized(session):
+        return redirect(url_for('authorisation'), code=302)
+    if session['user_role'] != 2:
+        return 'Твоя здесь низя!<br>'
+    query1 = get_param('q1')
+    query2 = get_param('q2')
+    conn = get_db_connection()
+    cur = conn.cursor()
+    sql = "select count(*) from (select 1 as a from items where items.item = %s) b"
+    cur.execute(sql, (query1, ))
+    data = cur.fetchall()
+    if data[0][0] == 0:
+        if str(query2) == "0":
+            sql = "insert into items (item) values (%s)"
+            cur.execute(sql, (query1, ))
+            conn.commit()
+            string1 = "Добавлен ТМЦ"
+            string2 = "Товар успешно внесён в список!"
+        else:
+            sql = "insert into items (item, serial_number) values (%s, %s)"
+            cur.execute(sql, (query1, query2, ))
+            conn.commit()
+            string1 = "Добавлен ТМЦ"
+            string2 = "Товар успешно внесён в список!"
+    else:
+        string1 = "Ошибка!"
+        string2 = "Видимо, такой товар уже существует"
+    data = [string1, string2]
+    cur.close()
+    conn.close()
+    return render_template('add_tmc_result.html', data = data)
+
+@app.route('/change_tmc', methods = ['GET', 'POST'])
+def change_tmc():
+    if not is_authorized(session):
+        return redirect(url_for('authorisation'), code=302)
+    if session['user_role'] != 2:
+        return 'Твоя здесь низя!<br>'
+    query1 = get_param('item_name')
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.close()
+    conn.close()
+    return render_template('change_tmc.html', q1=query1)
+
+@app.route('/change_tmc_result', methods=['GET', 'POST'])
+def change_tmc_result():
+    if not is_authorized(session):
+        return redirect(url_for('authorisation'), code=302)
+    if session['user_role'] != 2:
+        return 'Твоя здесь низя!<br>'
+    id_i = get_param("old_name")
+    print(id_i)
+    query1 = get_param('q1')
+    query2 = get_param('q2')
+    conn = get_db_connection()
+    cur = conn.cursor()
+    sql = "select count(*) from (select 1 as a from items where items.item = %s) b"
+    cur.execute(sql, (id_i, ))
+    data = cur.fetchall()
+    if data[0][0] != 0:
+        if str(query2) == "0":
+            sql = "update items set item = %s where items.item = %s"
+            cur.execute(sql, (query1, id_i, ))
+            conn.commit()
+            string1 = "Добавлен ТМЦ"
+            string2 = "Товар успешно внесён в список!"
+        else:
+            sql = "update items set item = %s , serial_number = %s where items.item = %s"
+            cur.execute(sql, (query1, query2, id_i, ))
+            conn.commit()
+            string1 = "Добавлен ТМЦ"
+            string2 = "Товар успешно внесён в список!"
+    else:
+        string1 = "Ошибка!"
+        string2 = "Видимо, такой товар ещё не существует!"
+    data = [string1, string2]
+    cur.close()
+    conn.close()
+    return render_template('change_tmc_result.html', data = data)

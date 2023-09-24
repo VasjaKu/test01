@@ -1,0 +1,35 @@
+<html>
+<head>
+<meta charset="utf-8">
+<title>Список пользователей и админов</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='/style.css') }}">
+</head>
+<body>
+<h1 align="center">Пользователи и админы</h1>
+<!-- <fieldset action="/reg_res"> -->
+<table width="100%">
+<tr>
+<th>ID пользователя</th>
+<th>Имя</th>
+<th>Статус</th>
+<th>Роль</th>
+<th>Действие</th>
+</tr>
+{% for i in range(number) %}
+<tr>
+<td>{{ data[i][0] }}</td>
+<td>{{ data[i][1] }}</td>
+<td>{{ data[i][2] }}</td>
+<td>{{ data[i][3] }}</td>
+<td><a href="/ban_result?id_u={{ data[i][0] }}&ban={{ strings[i][0] }}">{{strings[i][1]}}</a></td>
+</tr>
+{% endfor %}
+</table>
+<!-- </fieldset> -->
+<a href="/ban?limit={{ limit }}&offset={{ first }}&q={{ q }}"><<</a> <!-- ссылка на первую страницу -->
+<a href="/ban?limit={{ limit }}&offset={{ prev }}&q={{ q }}"><</a> <!-- ссылка на предыдущую страницу -->
+<a href="/ban?limit={{ limit }}&offset={{ next }}&q={{ q }}">></a> <!-- ссылка на следующую страницу -->
+<a href="/ban?limit={{ limit }}&offset={{ last }}&q={{ q }}">>></a> <!-- ссылка на последнюю страницу -->
+<a href="/"> На главную </a>
+</body>
+</html>
