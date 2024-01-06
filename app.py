@@ -73,7 +73,7 @@ def place():
         return redirect(url_for('authorisation'), code=302)
     warehouse_id = request.args.get('warehouse_id')
     title = request.args.get('title');
-    sql = "select id_i, item, serial_number, id_w,path, place, recordings_id, quantity,available ,f_date, l_date from recordings_view where id_w = %s"
+    sql = "select item_id, item, warehouse_id, place, total_q, total_amount from recordings where warehouse_id = %s"
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(sql, (warehouse_id))
@@ -100,7 +100,7 @@ def items():
     #return str(type(cur))+'ZZZ'
     cur.execute("""
         select count(*) as cnt
-        from items""");
+        from total_count""");
     data = cur.fetchall()
     total = float(data[0][0]);
     pages = math.ceil(total / limit)
@@ -119,11 +119,10 @@ def items():
         last_page = int(total // limit)*limit - limit
     else:
         last_page = int(total // limit)*limit
-
     cur.execute("""
-        select id_i, item, serial_number
-        from items
-        order by lower(item), id_i
+        select item_id, item, total_q, total_amount
+        from total_count
+        order by lower(item), item_id
         limit """+str(limit)+' offset '+str(offset))
     data = cur.fetchall()
     cur.close()
@@ -134,9 +133,48 @@ def items():
 def item():
     if not is_authorized(session):
         return redirect(url_for('authorisation'), code=302)
-    item_id = request.args.get('item_id')
-    title = request.args.get('item_name')
-    sql = "select id_i, item, serial_number, id_w,path, place, recordings_id, quantity,available ,f_date, l_date from recordings_view where id_i = %s"
+    sql = "select is_serial_number from items where id_i = %s"
+    conn = get_db_connection()
+    cur2 = conn.cursor()
+    cur2.execute(sql, (request.args.get('item_id')))
+    is_serial_number = cur2.fetchall()
+    cur2.close()
+    conn.close()
+    if is_serial_number[0][0] == False:    
+        item_id = request.args.get('item_id')
+        title = request.args.get('item_name')
+        sql = "select warehouse_id, place, total_q, total_amount, i_s_n from recordings where item_id = %s"
+    else:
+        item_id = request.args.get('item_id')
+        title = request.args.get('item_name')
+        sql = """
+            SELECT warehouse.place,
+                aaa.item_id,
+                aaa.warehouse_id,
+                aaa.item,
+                aaa.lot_id,
+                sum(aaa.total_q) AS total_q,
+                sum(aaa.total_amount) AS total_amount,
+                aaa.s_n
+               FROM ( SELECT i.item,
+                        i.id_i AS item_id,
+                        l.id_l AS lot_id,
+                        l.item_id AS item_id_from_lot,
+                        l.price AS lot_price,
+                        d.warehouse_id,
+                        w.id_w,
+                        sum(d.quantity_change) AS total_q,
+                        sum(d.quantity_change)::double precision * l.price AS total_amount,
+                        l.serial_number AS s_n
+                       FROM items i,
+                        lots l,
+                        debit_credit d,
+                        warehouse w
+                      WHERE d.lot_id = l.id_l AND d.warehouse_id = w.id_w
+                      GROUP BY i.item, d.warehouse_id, i.id_i, l.id_l, l.price, l.quantity, w.id_w) aaa, warehouse
+              WHERE aaa.id_w = warehouse.id_w AND aaa.item_id = %s
+              GROUP BY aaa.lot_id, warehouse.place, aaa.item_id, aaa.item, aaa.warehouse_id, aaa.s_n;
+        """
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(sql, (item_id))
@@ -201,17 +239,17 @@ def do_search():
 
 @app.route('/reg', methods=['GET', 'POST'])
 def registration():
-    if not is_authorized(session):
-        return redirect(url_for('authorisation'), code=302)
-    if session['user_role'] != 2:
-        return 'Твоя здесь низя!<br>'
+    #if not is_authorized(session):
+    #    return redirect(url_for('authorisation'), code=302)
+    #if session['user_role'] != 2:
+    #    return 'Твоя здесь низя!<br>'
     query1 = get_param('q1')
     query2 = get_param('q2')
     query3 = get_param('q3')
     data = [query1, query2, query3]
     conn = get_db_connection()
     cur = conn.cursor()
-    sql = "select id_r, role from roles order by role"
+    sql = "select id_ro, role from roles order by role"
     cur.execute(sql)
     data = cur.fetchall() 
     cur.close()
@@ -220,10 +258,10 @@ def registration():
 
 @app.route('/reg_res', methods=['GET', 'POST'])
 def registration_result():
-    if not is_authorized(session):
-        return redirect(url_for('authorisation'), code=302)
-    if session['user_role'] != 2:
-        return 'Твоя здесь низя!<br>'
+    #if not is_authorized(session):
+    #    return redirect(url_for('authorisation'), code=302)
+    #if session['user_role'] != 2:
+    #    return 'Твоя здесь низя!<br>'
     query1 = get_param('q1')
     query2 = get_param('q2')
     query3 = get_param('q3')
@@ -239,10 +277,10 @@ def registration_result():
             string = query2 + salt
             ha = hashlib.md5(string.encode())
             #sql = "insert into users(username, salt, pass, ban, user_role) values ('"+query1+"', '"+salt+"', '"+ha.hexdigest()+"', 'Yes', '"+get_param('role')+"')"
-            sql = "insert into users(username, salt, pass, ban, user_role) values (%s, %s, %s, %s, %s)"
+            sql = "insert into users(username, salt, password, ban, role_id) values (%s, %s, %s, %s, %s)"
             #print(sql)
             #cur.execute(sql)
-            cur.execute(sql, (query1, salt, ha.hexdigest(), 'Yes', get_param('role')))
+            cur.execute(sql, (query1, salt, ha.hexdigest(), 'false', get_param('role')))
             conn.commit()
             string1 = "Регистрация успешно завершена!"
             string2 = "Теперь вам доступно ровно 0 новых фишек!"
@@ -285,13 +323,13 @@ def authorisation_result():
         string2 = "Такого никнейма нет в базе дынных. Введите другое имя или зарегистрируйтесь!"
     else:
         #sql = "select salt, pass, ban, user_role from users where users.username = '"+query1+"'"
-        sql = "select salt, pass, ban, user_role from users where users.username = %s"
+        sql = "select salt, password, ban, role_id from users where users.username = %s"
         #cur.execute(sql)
         cur.execute(sql, (query1, ))
         data = cur.fetchall();
         string = query2 + data[0][0]
         ha = hashlib.md5(string.encode())
-        if data[0][2] == "Yes" and data[0][1] == ha.hexdigest():
+        if data[0][2] == False and data[0][1] == ha.hexdigest():
             string1 = "Авторизация успешно завершена!"
             string2 = "Это не изменило ровным счётом ничего!"
             session['username'] = query1
@@ -315,7 +353,7 @@ def authorisation_result():
 def ban():
     if not is_authorized(session):
         return redirect(url_for('authorisation'), code=302)
-    if session['user_role'] != 2:
+    if session['user_role'] != 1:
         return 'Твоя здесь низя!<br>'
     conn = get_db_connection()
     cur = conn.cursor()
@@ -347,7 +385,7 @@ def ban():
     if next_page >= total:
        next_page = next_page - limit
     last_page = int(total // limit)*limit
-    sql = "select id_u, username, ban, user_role from users order by id_u"
+    sql = "select id_u, role_id, username, ban from users order by id_u"
     user = session["username"]
     cur.execute(sql)
     data = cur.fetchall()
@@ -370,7 +408,7 @@ def ban():
 def ban_result():
     if not is_authorized(session):
         return redirect(url_for('authorisation'), code=302)
-    if session['user_role'] != 2:
+    if session['user_role'] != 1:
         return 'Твоя здесь низя!<br>'
     id_u = request.args.get('id_u')
     ban = request.args.get('ban')
@@ -384,7 +422,7 @@ def ban_result():
     conn.commit()
     if session["username"] == name[0][0]:
         words = "Нельзя расстрелять самого себя!"
-    elif ban == "Yes":
+    elif ban == True:
         words = "Пользователь был амнистирован!"
     else:
         words = "Именем админа Вы приговариваетесь к расстрелу! *Пыщ!*"
@@ -397,7 +435,7 @@ def ban_result():
 def add_tmc():
     if not is_authorized(session):
         return redirect(url_for('authorisation'), code=302)
-    if session['user_role'] != 2:
+    if session['user_role'] != 1:
         return 'Твоя здесь низя!<br>'
     query1 = get_param('q1')
     query2 = get_param('q2')
@@ -411,7 +449,7 @@ def add_tmc():
 def tmc_result():
     if not is_authorized(session):
         return redirect(url_for('authorisation'), code=302)
-    if session['user_role'] != 2:
+    if session['user_role'] != 1:
         return 'Твоя здесь низя!<br>'
     query1 = get_param('q1')
     query2 = get_param('q2')
@@ -445,7 +483,7 @@ def tmc_result():
 def change_tmc():
     if not is_authorized(session):
         return redirect(url_for('authorisation'), code=302)
-    if session['user_role'] != 2:
+    if session['user_role'] != 1:
         return 'Твоя здесь низя!<br>'
     query1 = get_param('item_name')
     conn = get_db_connection()
@@ -489,3 +527,102 @@ def change_tmc_result():
     cur.close()
     conn.close()
     return render_template('change_tmc_result.html', data = data)
+
+@app.route('/put_tmc', methods = ['GET', 'POST'])
+def put_tmc():
+    if not is_authorized(session):
+        return redirect(url_for('authorisation'), code=302)
+    if session['user_role'] != 1:
+        return 'Твоя здесь низя!<br>'
+    sql = "select id_w, id_u, f_date from"
+    query1 = get_param('q1')
+    query2 = get_param('q2')
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.close()
+    conn.close()
+    return render_template('put_tmc.html', q1=query1, q2 = query2)
+
+@app.route('/put_tmc_result', methods=['GET', 'POST'])
+def put_tmc_result():
+    if not is_authorized(session):
+        return redirect(url_for('authorisation'), code=302)
+    if session['user_role'] != 1:
+        return 'Твоя здесь низя!<br>'
+    query1 = get_param('q1')
+    query2 = get_param('q2')
+    conn = get_db_connection()
+    cur = conn.cursor()
+    sql = "select count(*) from (select 1 as a from items where items.item = %s) b"
+    cur.execute(sql, (query1, ))
+    data = cur.fetchall()
+    if data[0][0] == 0:
+        if str(query2) == "0":
+            sql = "insert into items (item) values (%s)"
+            cur.execute(sql, (query1, ))
+            conn.commit()
+            string1 = "Добавлен ТМЦ"
+            string2 = "Товар успешно внесён в список!"
+        else:
+            sql = "insert into items (item, serial_number) values (%s, %s)"
+            cur.execute(sql, (query1, query2, ))
+            conn.commit()
+            string1 = "Добавлен ТМЦ"
+            string2 = "Товар успешно внесён в список!"
+    else:
+        string1 = "Ошибка!"
+        string2 = "Видимо, такой товар уже существует"
+    data = [string1, string2]
+    cur.close()
+    conn.close()
+    return render_template('put_tmc_result.html', data = data)
+
+@app.route('/debit-credit', methods = ['GET', 'POST'])
+def debit_credit():
+    if not is_authorized(session):
+        return redirect(url_for('authorisation'), code=302)
+    conn = get_db_connection()
+    cur = conn.cursor()
+    limit = get_param('limit')
+    if limit is None or limit == '':
+        limit = 10
+    else:
+        limit = int(limit)
+    if get_param('offset') is None or get_param('offset') == '':
+        offset = 0
+    else:
+        offset = int(get_param('offset'))
+    if offset < 0:
+        offset = 0
+    #return str(type(cur))+'ZZZ'
+    cur.execute("""
+        select count(*) as cnt
+        from debit_credit""");
+    data = cur.fetchall()
+    total = float(data[0][0]);
+    pages = math.ceil(total / limit)
+    page = math.floor(offset / limit)
+    if (page <= 0):
+        previous_page = 0
+    else:
+        previous_page = (page - 1)*limit
+    if (page >= pages):
+       next_page = pages*limit
+    else:
+       next_page = (page + 1)*limit
+    if next_page >= total:
+       next_page = next_page - limit
+    if (int(total // limit)*limit == (int(total // limit)*limit)):
+        last_page = int(total // limit)*limit - limit
+    else:
+        last_page = int(total // limit)*limit
+    cur.execute("""
+        select id_dc, lot_id, place, username, date, quantity_change
+        from debit_credit, warehouse, users
+        where warehouse.id_w = debit_credit.warehouse_id and users.id_u = debit_credit.user_id
+        order by id_dc, date, user_id, quantity_change
+        limit """+str(limit)+' offset '+str(offset))
+    data = cur.fetchall()
+    cur.close()
+    conn.close()
+    return render_template('debit_credit.html', data=data, next=next_page, prev=previous_page, first=0, last=last_page, limit=limit)

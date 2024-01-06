@@ -7,17 +7,17 @@
 <h1 align="center"> Страница места {{ title }}</h1>
 <table width="100%" border="1" cellpadding="1" cellspacing="1">
 <tr>
-<td>Название</td>
+<td>ID товара</td>
+<td>Наименование</td>
 <td>Количество</td>
-<td>Дата С</td>
-<td>Дата По</td>
+<td>На сумму</td>
 </tr>
 {% for rec in data %}
 <tr>
+<td>{{ rec[0] }}</td>
 <td>{{ rec[1] }}</td>
-<td>{{ rec[7] }}</td>
-<td>{{ rec[9] }}</td>
-<td>{{ rec[10] }}</td>
+<td>{{ rec[4] }}</td>
+<td>{{ rec[5] }}</td>
 </tr>
 {% endfor %}
 </table>

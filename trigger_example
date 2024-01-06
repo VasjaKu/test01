@@ -1,0 +1,13 @@
+create or replace function update_temp() returns trigger as $data$
+begin
+    if old.id is not null then
+        insert into temp_log(id, txt, who, t_when) values (old.id, old.txt, old.who, now());
+    end if;
+    return new;
+end;
+$data$ language plpgsql;
+
+create trigger temp_trg before insert or update on temp
+for each row execute function update_temp();
+
+insert into temp(id, txt, who) values (1,'zzz','me');

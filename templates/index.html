@@ -13,7 +13,7 @@
 <h1 align="center">Главная страница склада</h1>
 <table width="100%" border="1" cellpadding="1" cellspacing="1">
 <tr>
-<td>ID записи</td>
+<td>ID места хранения</td>
 <td>Название</td>
 <td>Полный путь</td>
 </tr>
@@ -26,6 +26,8 @@
 {% endfor %}
 </table>
 <a href="/items">Список ТМЦ</a>
+<br>
+<a href="/debit-credit">Дебит-кредит</a>
 <form name="search" method="POST" action="/search">
 <input type="text" name="q" value="" /> <input type="submit" value="Искать" />
 </form>

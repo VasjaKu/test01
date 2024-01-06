@@ -10,7 +10,8 @@
 <tr>
 <td>ID записи</td>
 <td>Наименование</td>
-<td>Серийный номер</td>
+<td>Количество</td>
+<td>На сумму</td>
 <td>Нашли ошибку?</td>
 </tr>
 {% for rec in data %}
@@ -18,6 +19,7 @@
 <td>{{ rec[0] }}</td>
 <td><a href="/item?item_id={{ rec[0] }}&item_name={{ rec[1] }}">{{ rec[1] }}</a></td>
 <td>{{ rec[2] }}</td>
+<td>{{ rec[3] }}</td>
 <td><a href="/change_tmc?item_name={{ rec[1] }}">Внести правки</a></td>
 </tr>
 {% endfor %}
