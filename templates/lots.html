@@ -1,0 +1,39 @@
+<html>
+<head>
+<link rel="stylesheet" href="{{ url_for('static', filename='/style.css') }}">
+<meta charset="utf-8">
+<title>Партии товаров</title>
+</head>
+<body>
+<h1 align="center"> Страница партий</h1>
+<table width="100%" border="1" cellpadding="1" cellspacing="1">
+<tr>
+<td>ID партии</td>
+<td>ТМЦ</td>
+<td>Цена</td>
+<td>Количество</td>
+<td>Серийный номер</td>
+<td>Дата создания записи</td>
+</tr>
+{% for rec in data %}
+<tr>
+<td>{{ rec[0] }}</td>
+<td>{{ rec[1] }}</td>
+<td>{{ rec[2] }}</td>
+<td>{{ rec[3] }}</td>
+<td>{{ rec[4] }}</td>
+<td>{{ rec[5] }}</td>
+</tr>
+{% endfor %}
+</table>
+<a href="/lots?limit={{ limit }}&offset={{ first }}"><<</a> <!-- ссылка на первую страницу -->
+<a href="/lots?limit={{ limit }}&offset={{ prev }}"><</a> <!-- ссылка на предыдущую страницу -->
+<a href="/lots?limit={{ limit }}&offset={{ next }}">></a> <!-- ссылка на следующую страницу -->
+<a href="/lots?limit={{ limit }}&offset={{ last }}">>></a> <!-- ссылка на последнюю страницу -->
+<br>
+<a href="/add-lot"> Добавить новую партию </a>
+<br>
+<a href="/"> На главную </a>
+</body>
+</html>
+

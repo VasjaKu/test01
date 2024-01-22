@@ -1,0 +1,31 @@
+<html>
+<head>
+<meta charset="utf-8">
+<title>>Добавление партии</title>
+</head>
+<body>
+<h1 align="center">Добавим новую партию товара:</h1>
+<fieldset action="/add-lot-result">
+<form action= "/add-lot-result" method="POST">
+<legend>Партия:</legend>
+<label>Выберите товар:</label> 
+<select name="tmc">
+{% for record in data %}
+   <option value="{{ record[1] }}">{{ record[0] }}</option>
+{% endfor %}
+</select>
+<label>Цена за единицу<input type="text" name="q2" required></label>
+<br>
+<label>Количество<input type="text" name="q3" required></label>
+<br>
+<label>Наличие серийного номера (0 - если его нет, всё что угодно другое - если есть)<input type="text" name="q4" required></label>
+<br>
+<button type= "submit"> Зарегистрировать новую партию! </button>
+</form>
+</fieldset>
+<br>
+<a href="/items">Вернуться к товарам</a>
+<br>
+<a href="/"> На главную </a>
+</body>
+</html>
