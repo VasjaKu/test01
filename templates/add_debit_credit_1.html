@@ -1,0 +1,26 @@
+<html>
+<head>
+<meta charset="utf-8">
+<title>>Добавление новой записи</title>
+</head>
+<body>
+<h1 align="center">Выберите, с каким товаром Вы хотите взаимодействовать:</h1>
+<fieldset action="/add-debit-credit-2">
+<form action= "/add-debit-credit-2" method="POST">
+<legend>Товары:</legend>
+<label>Выберите товар:</label> 
+<select name="item">
+{% for record in data %}
+   <option value="{{ record[1] }}">{{ record[0] }}</option>
+{% endfor %}
+</select>
+<br>
+<button type= "submit"> Далее... </button>
+</form>
+</fieldset>
+<br>
+<a href="/debit-credit">Вернуться к записям</a>
+<br>
+<a href="/"> На главную </a>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<html>
+<head>
+<meta charset="utf-8">
+<title>>Добавление новой записи</title>
+</head>
+<body>
+<h1 align="center">Выберите, с какой точкой склада Вы хотите взаимодействовать:</h1>
+<fieldset action="/add-debit-credit-4">
+<form action= "/add-debit-credit-4" method="POST">
+<legend>Места хранения:</legend>
+<label>Выберите место хранения:</label> 
+<select name="place">
+{% for record in data %}
+   <option value="{{ record[1] }}">{{ record[0] }}</option>
+{% endfor %}
+</select>
+<br>
+<input type="hidden" name="q2" value="{{ q2 }}">
+<button type= "submit"> Далее... </button>
+</form>
+</fieldset>
+<br>
+<a href="/debit-credit">Вернуться к записям</a>
+<br>
+<a href="/add-debit-credit-1">Вернуться в начало</a>
+<br>
+<a href="/"> На главную </a>
+</body>
+</html>

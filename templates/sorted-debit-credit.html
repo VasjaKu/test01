@@ -1,0 +1,39 @@
+<html>
+<head>
+<meta charset="UTF-8">
+</head>
+<body>
+<h1 align="center">Заголовок</h1>
+<button id="showContent">Показать</button>
+<button id="hideContent">Скрыть</button>
+<form method="POST" action="http://scripts.bloged.org/whoami.php" id= "content" style="display:none;"   >
+<fieldset><legend>Выберите варианты фильтрации</legend>
+<input type="checkbox" name="a[]" value="1" /> 1 <input type="checkbox" name="a[]" value="2" /> 2<br>
+<input type="checkbox" name="a[]" value="5" /> 5 <input type="checkbox" name="a[]" value="7" /> 7<br>
+</fieldset>
+<!--
+<select name="values[]" multiple="multiple">
+<option value="1">Выбран вариант 1</option>
+<option value="2">Выбран вариант 2</option>
+<option value="3">Выбран вариант 3</option>
+<option value="4">Выбран вариант 4</option>
+</select>
+-->
+<input type="submit" value="Отправить" />
+</form>
+  <script>
+let content = document.getElementById("content")
+let show = document.getElementById("showContent")
+let hide = document.getElementById("hideContent")
+
+show.addEventListener("click", () => {
+    content.style.display = "block"
+})
+
+hide.addEventListener("click", () => {
+    content.style.display = "none"
+})
+  </script>
+
+</body>
+</html>

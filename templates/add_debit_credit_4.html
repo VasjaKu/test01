@@ -1,0 +1,26 @@
+<html>
+<head>
+<meta charset="utf-8">
+<title>>Добавление новой записи</title>
+</head>
+<body>
+<h1 align="center">Бубны с количеством товара:</h1>
+<fieldset action="/add-debit-credit-result">
+<form action= "/add-debit-credit-result" method="POST">
+<label>На данный момент из выбранной партии в Вашем распоряжении находится {{dop}} единиц товара, а в выбранном месте хранения лежит {{data3[0][0]}} единиц.</label>
+<br>
+<label>Выберите, сколько вы хотите положить (положительное число) или забрать (отрицательное число): <input type="text" name="q3" required></label>
+<input type="hidden" name="q1" value="{{ q1 }}">
+<input type="hidden" name="q2" value="{{ q2 }}">
+<input type="hidden" name="q3" value="{{ q3 }}">
+<button type= "submit"> Далее... </button>
+</form>
+</fieldset>
+<br>
+<a href="/debit-credit">Вернуться к записям</a>
+<br>
+<a href="/add-debit-credit-1">Вернуться в начало</a>
+<br>
+<a href="/"> На главную </a>
+</body>
+</html>

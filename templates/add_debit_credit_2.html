@@ -1,0 +1,28 @@
+<html>
+<head>
+<meta charset="utf-8">
+<title>>Добавление новой записи</title>
+</head>
+<body>
+<h1 align="center">Выберите, с какой партией Вы хотите взаимодействовать (кроме ВКП(б) и ПЛП):</h1>
+<fieldset action="/add-debit-credit-3">
+<form action= "/add-debit-credit-3" method="POST">
+<legend>Партии (пока различать можем только по цене):</legend>
+<label>Выберите партию:</label> 
+<select name="lot">
+{% for record in data %}
+   <option value="{{ record[0] }}">{{ record[1] }} - цена, {{ record[2] }} - дата создания записи, {{ record[3] }} - серийный номер, {{ record[4] }} - начальное количество в партии</option>
+{% endfor %}
+</select>
+<br>
+<button type= "submit"> Далее... </button>
+</form>
+</fieldset>
+<br>
+<a href="/debit-credit">Вернуться к записям</a>
+<br>
+<a href="/add-debit-credit-1">Вернуться назад</a>
+<br>
+<a href="/"> На главную </a>
+</body>
+</html>
